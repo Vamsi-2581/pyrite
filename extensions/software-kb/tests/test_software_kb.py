@@ -2293,25 +2293,47 @@ class TestBacklogDependencies:
         "links",
         [
             pytest.param(
-                [{"source": "item-y", "target": "item-x", "relation": "blocked_by", "inverse": "blocks"}],
+                [
+                    {
+                        "source": "item-y",
+                        "target": "item-x",
+                        "relation": "blocked_by",
+                        "inverse": "blocks",
+                    }
+                ],
                 id="blocked-by-on-y",
             ),
             pytest.param(
-                [{"source": "item-x", "target": "item-y", "relation": "blocks", "inverse": "blocked_by"}],
+                [
+                    {
+                        "source": "item-x",
+                        "target": "item-y",
+                        "relation": "blocks",
+                        "inverse": "blocked_by",
+                    }
+                ],
                 id="blocks-on-x",
             ),
             pytest.param(
                 [
-                    {"source": "item-y", "target": "item-x", "relation": "blocked_by", "inverse": "blocks"},
-                    {"source": "item-x", "target": "item-y", "relation": "blocks", "inverse": "blocked_by"},
+                    {
+                        "source": "item-y",
+                        "target": "item-x",
+                        "relation": "blocked_by",
+                        "inverse": "blocks",
+                    },
+                    {
+                        "source": "item-x",
+                        "target": "item-y",
+                        "relation": "blocks",
+                        "inverse": "blocked_by",
+                    },
                 ],
                 id="both-directions",
             ),
         ],
     )
     def test_dependency_relations_are_consistent_in_both_directions(self, links):
-        from unittest.mock import patch
-
         with tempfile.TemporaryDirectory() as tmpdir:
             db = _make_test_db(
                 tmpdir,
