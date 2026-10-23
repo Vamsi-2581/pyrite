@@ -2289,6 +2289,80 @@ class TestSwCreateAdrNumbersFromFiles:
 class TestBacklogDependencies:
     """Tests for blocks/blocked_by dependency support in flow tools."""
 
+    @pytest.mark.parametrize(
+        "links",
+        [
+            pytest.param(
+                [{"source": "item-y", "target": "item-x", "relation": "blocked_by", "inverse": "blocks"}],
+                id="blocked-by-on-y",
+            ),
+            pytest.param(
+                [{"source": "item-x", "target": "item-y", "relation": "blocks", "inverse": "blocked_by"}],
+                id="blocks-on-x",
+            ),
+            pytest.param(
+                [
+                    {"source": "item-y", "target": "item-x", "relation": "blocked_by", "inverse": "blocks"},
+                    {"source": "item-x", "target": "item-y", "relation": "blocks", "inverse": "blocked_by"},
+                ],
+                id="both-directions",
+            ),
+        ],
+    )
+    def test_dependency_relations_are_consistent_in_both_directions(self, links):
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = _make_test_db(
+                tmpdir,
+                entries=[
+                    {
+                        "id": "item-x",
+                        "title": "Blocker",
+                        "status": "accepted",
+                        "priority": "high",
+                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "entry_type": "backlog_item",
+                    },
+                    {
+                        "id": "item-y",
+                        "title": "Blocked item",
+                        "status": "accepted",
+                        "priority": "critical",
+                        "meta": {"kind": "feature", "status": "accepted", "priority": "critical"},
+                        "entry_type": "backlog_item",
+                    },
+                ],
+                links=links,
+            )
+            try:
+                plugin = _make_plugin_with_db(db)
+                blocked_context = plugin._mcp_context_for_item(
+                    {"item_id": "item-y", "kb_name": "test"}
+                )
+                blocker_context = plugin._mcp_context_for_item(
+                    {"item_id": "item-x", "kb_name": "test"}
+                )
+                blocked_deps = blocked_context["dependencies"]
+                blocker_deps = blocker_context["dependencies"]
+
+                assert [dep["id"] for dep in blocked_deps["blocked_by"]] == ["item-x"]
+                assert blocked_deps["is_blocked"] is True
+                assert [dep["id"] for dep in blocker_deps["blocks"]] == ["item-y"]
+
+                next_result = plugin._mcp_pull_next({"kb_name": "test"})
+                assert next_result["recommendation"]["id"] == "item-x"
+                assert [item["id"] for item in next_result["blocked_items"]] == ["item-y"]
+
+                # A blocked item cannot be claimed through the MCP workflow.
+                result = plugin._mcp_claim(
+                    {"item_id": "item-y", "kb_name": "test", "assignee": "agent"}
+                )
+                assert result["claimed"] is False
+                assert "unresolved dependencies" in result["error"]
+            finally:
+                db.close()
+
     def test_relationship_types_include_blocks(self):
         plugin = SoftwareKBPlugin()
         rel_types = plugin.get_relationship_types()
@@ -4244,6 +4318,13 @@ class TestBacklogSortAndFilter:
                         "meta": {"kind": "feature", "status": "proposed"},
                     },
                     {
+                        "id": "in-epic-backlink",
+                        "title": "In Epic via child-side link",
+                        "entry_type": "backlog_item",
+                        "status": "proposed",
+                        "meta": {"kind": "feature", "status": "proposed"},
+                    },
+                    {
                         "id": "out-epic",
                         "title": "Outside Epic",
                         "entry_type": "backlog_item",
@@ -4258,6 +4339,18 @@ class TestBacklogSortAndFilter:
                         "relation": "has_subtask",
                         "inverse": "subtask_of",
                     },
+                    {
+                        "source": "in-epic",
+                        "target": "epic-f",
+                        "relation": "subtask_of",
+                        "inverse": "has_subtask",
+                    },
+                    {
+                        "source": "in-epic-backlink",
+                        "target": "epic-f",
+                        "relation": "subtask_of",
+                        "inverse": "has_subtask",
+                    },
                 ],
             )
             try:
@@ -4265,7 +4358,9 @@ class TestBacklogSortAndFilter:
                 result = plugin._mcp_backlog({"kb_name": "test", "epic": "epic-f"})
                 ids = [i["id"] for i in result["items"]]
                 assert "in-epic" in ids
+                assert "in-epic-backlink" in ids
                 assert "out-epic" not in ids
+                assert len(ids) == len(set(ids))
             finally:
                 db.close()
 
