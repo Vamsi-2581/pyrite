@@ -2343,7 +2343,11 @@ class TestBacklogDependencies:
                         "title": "Blocker",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                         "entry_type": "backlog_item",
                     },
                     {
@@ -2351,7 +2355,11 @@ class TestBacklogDependencies:
                         "title": "Blocked item",
                         "status": "accepted",
                         "priority": "critical",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "critical"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "critical",
+                        },
                         "entry_type": "backlog_item",
                     },
                 ],
@@ -2374,7 +2382,9 @@ class TestBacklogDependencies:
 
                 next_result = plugin._mcp_pull_next({"kb_name": "test"})
                 assert next_result["recommendation"]["id"] == "item-x"
-                assert [item["id"] for item in next_result["blocked_items"]] == ["item-y"]
+                assert [item["id"] for item in next_result["blocked_items"]] == [
+                    "item-y",
+                ]
 
                 # A blocked item cannot be claimed through the MCP workflow.
                 result = plugin._mcp_claim(
@@ -2395,7 +2405,11 @@ class TestBacklogDependencies:
                         "title": "Blocked item",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                     },
                 ],
             )
@@ -2416,7 +2430,15 @@ class TestBacklogDependencies:
                         "accepted",
                         "high",
                         None,
-                        json.dumps({"kind": "feature", "status": "accepted", "priority": "high"}),
+                        json.dumps(
+                            json.dumps(
+                                {
+                                    "kind": "feature",
+                                    "status": "accepted",
+                                    "priority": "high",
+                                }
+                            ),
+                        ),
                         "2026-01-01T00:00:00",
                         "2026-01-01T00:00:00",
                     ),
@@ -2450,7 +2472,9 @@ class TestBacklogDependencies:
                     {"kb_name": "test"}, readable_kbs={"test"}
                 )
                 assert next_result["recommendation"] is None
-                assert [item["id"] for item in next_result["blocked_items"]] == ["item-y"]
+                assert [item["id"] for item in next_result["blocked_items"]] == [
+                    "item-y",
+                ]
 
                 result = plugin._mcp_claim(
                     {"item_id": "item-y", "kb_name": "test", "assignee": "agent"},
@@ -2483,14 +2507,22 @@ class TestBacklogDependencies:
                         "title": "Task A",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                     },
                     {
                         "id": "item-b",
                         "title": "Task B",
                         "status": "accepted",
                         "priority": "critical",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "critical"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "critical",
+                        },
                     },
                 ],
                 links=[
@@ -2521,14 +2553,22 @@ class TestBacklogDependencies:
                         "title": "Task A",
                         "status": "done",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "done", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "done",
+                            "priority": "high",
+                        },
                     },
                     {
                         "id": "item-b",
                         "title": "Task B",
                         "status": "accepted",
                         "priority": "critical",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "critical"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "critical",
+                        },
                     },
                 ],
                 links=[
@@ -2559,14 +2599,22 @@ class TestBacklogDependencies:
                         "title": "Task A",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                     },
                     {
                         "id": "item-b",
                         "title": "Task B",
                         "status": "accepted",
                         "priority": "critical",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "critical"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "critical",
+                        },
                     },
                 ],
                 links=[
@@ -2600,7 +2648,11 @@ class TestBacklogDependencies:
                         "title": "Task A",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                         "entry_type": "backlog_item",
                     },
                     {
@@ -2608,7 +2660,11 @@ class TestBacklogDependencies:
                         "title": "Task B",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                         "entry_type": "backlog_item",
                     },
                     {
@@ -2639,7 +2695,9 @@ class TestBacklogDependencies:
             )
             try:
                 plugin = _make_plugin_with_db(db)
-                result = plugin._mcp_context_for_item({"item_id": "item-b", "kb_name": "test"})
+                result = plugin._mcp_context_for_item(
+                    {"item_id": "item-b", "kb_name": "test"}
+                )
                 assert "dependencies" in result
                 deps = result["dependencies"]
                 assert len(deps["blocked_by"]) == 2
@@ -2662,14 +2720,22 @@ class TestBacklogDependencies:
                         "title": "Task A",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                     },
                     {
                         "id": "item-b",
                         "title": "Task B",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                     },
                 ],
                 links=[
@@ -2704,14 +2770,22 @@ class TestBacklogDependencies:
                         "title": "Task A",
                         "status": "done",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "done", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "done",
+                            "priority": "high",
+                        },
                     },
                     {
                         "id": "item-b",
                         "title": "Task B",
                         "status": "accepted",
                         "priority": "high",
-                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                        "meta": {
+                            "kind": "feature",
+                            "status": "accepted",
+                            "priority": "high",
+                        },
                     },
                 ],
                 links=[
@@ -2737,7 +2811,9 @@ class TestBacklogDependencies:
                 }
                 with (
                     patch("pyrite.config.load_config"),
-                    patch("pyrite.services.kb_service.KBService", return_value=mock_svc),
+                    patch(
+                        "pyrite.services.kb_service.KBService", return_value=mock_svc
+                    ),
                 ):
                     result = plugin._mcp_claim(
                         {"item_id": "item-b", "kb_name": "test", "assignee": "agent"}

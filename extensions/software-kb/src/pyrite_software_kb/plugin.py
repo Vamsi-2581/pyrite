@@ -1029,7 +1029,9 @@ class SoftwareKBPlugin:
             epic_subtask_ids: set[str] | None = None
             if epic_filter:
                 epic_subtask_ids = set()
-                for link in db.get_outlinks(epic_filter, kb_name or "", readable_kbs=readable_kbs):
+                for link in db.get_outlinks(
+                    epic_filter, kb_name or "", readable_kbs=readable_kbs
+                ):
                     if link.get("relation") == "has_subtask":
                         epic_subtask_ids.add(link["id"])
                 for link in db.get_backlinks(
