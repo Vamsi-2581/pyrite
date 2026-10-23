@@ -1886,8 +1886,9 @@ class SoftwareKBPlugin:
 
         The storage layer reports a relation from the perspective of the
         entry being queried for both outlinks and backlinks. Keep the caller's
-        read scope on each lookup: an unreadable blocker remains unknown and an
-        unreadable item this one blocks is not exposed.
+        read scope on each lookup: an unreadable blocker is reported without a
+        title, with unknown status, and remains unresolved; an unreadable item
+        this one blocks is omitted.
         """
         import json
 
