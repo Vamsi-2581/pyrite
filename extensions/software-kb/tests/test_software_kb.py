@@ -2385,6 +2385,85 @@ class TestBacklogDependencies:
             finally:
                 db.close()
 
+    def test_unreadable_blocker_remains_unknown_and_unresolved(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db = _make_test_db(
+                tmpdir,
+                entries=[
+                    {
+                        "id": "item-y",
+                        "title": "Blocked item",
+                        "status": "accepted",
+                        "priority": "high",
+                        "meta": {"kind": "feature", "status": "accepted", "priority": "high"},
+                    },
+                ],
+            )
+            try:
+                db._raw_conn.execute(
+                    "INSERT INTO kb (name, path, kb_type) VALUES (?, ?, ?)",
+                    ("private", str(Path(tmpdir) / "private"), "generic"),
+                )
+                db._raw_conn.execute(
+                    "INSERT INTO entry (id, kb_name, entry_type, title, body, status, priority, assignee, metadata, created_at, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        "item-x",
+                        "private",
+                        "backlog_item",
+                        "Private blocker",
+                        "",
+                        "accepted",
+                        "high",
+                        None,
+                        json.dumps({"kind": "feature", "status": "accepted", "priority": "high"}),
+                        "2026-01-01T00:00:00",
+                        "2026-01-01T00:00:00",
+                    ),
+                )
+                db._raw_conn.execute(
+                    "INSERT INTO link (source_id, source_kb, target_id, target_kb, relation, inverse_relation) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    ("item-y", "test", "item-x", "private", "blocked_by", "blocks"),
+                )
+                db._raw_conn.commit()
+
+                plugin = _make_plugin_with_db(db)
+                blocked_context = plugin._mcp_context_for_item(
+                    {"item_id": "item-y", "kb_name": "test"},
+                    readable_kbs={"test"},
+                )
+                blocker_context = plugin._mcp_context_for_item(
+                    {"item_id": "item-x", "kb_name": "private"},
+                    readable_kbs={"private"},
+                )
+                blocked_by = blocked_context["dependencies"]["blocked_by"]
+                assert len(blocked_by) == 1
+                assert blocked_by[0]["id"] == "item-x"
+                assert blocked_by[0]["status"] == "unknown"
+                assert blocked_by[0]["resolved"] is False
+                assert blocked_by[0]["title"] in ("", None)
+                assert blocked_context["dependencies"]["is_blocked"] is True
+                assert blocker_context["dependencies"]["blocks"] == []
+
+                next_result = plugin._mcp_pull_next(
+                    {"kb_name": "test"}, readable_kbs={"test"}
+                )
+                assert next_result["recommendation"] is None
+                assert [item["id"] for item in next_result["blocked_items"]] == ["item-y"]
+
+                result = plugin._mcp_claim(
+                    {"item_id": "item-y", "kb_name": "test", "assignee": "agent"},
+                    readable_kbs={"test"},
+                )
+                assert result["claimed"] is False
+                assert "unresolved dependencies" in result["error"]
+                assert result["unresolved_dependencies"] == [
+                    {"id": "item-x", "title": "", "status": "unknown"}
+                ]
+            finally:
+                db.close()
+
     def test_relationship_types_include_blocks(self):
         plugin = SoftwareKBPlugin()
         rel_types = plugin.get_relationship_types()
@@ -4360,12 +4439,6 @@ class TestBacklogSortAndFilter:
                         "target": "in-epic",
                         "relation": "has_subtask",
                         "inverse": "subtask_of",
-                    },
-                    {
-                        "source": "in-epic",
-                        "target": "epic-f",
-                        "relation": "subtask_of",
-                        "inverse": "has_subtask",
                     },
                     {
                         "source": "in-epic-backlink",
