@@ -2442,7 +2442,7 @@ class TestBacklogDependencies:
                 assert blocked_by[0]["id"] == "item-x"
                 assert blocked_by[0]["status"] == "unknown"
                 assert blocked_by[0]["resolved"] is False
-                assert blocked_by[0]["title"] in ("", None)
+                assert blocked_by[0]["title"] is None
                 assert blocked_context["dependencies"]["is_blocked"] is True
                 assert blocker_context["dependencies"]["blocks"] == []
 
@@ -2459,7 +2459,7 @@ class TestBacklogDependencies:
                 assert result["claimed"] is False
                 assert "unresolved dependencies" in result["error"]
                 assert result["unresolved_dependencies"] == [
-                    {"id": "item-x", "title": "", "status": "unknown"}
+                    {"id": "item-x", "title": None, "status": "unknown"}
                 ]
             finally:
                 db.close()
