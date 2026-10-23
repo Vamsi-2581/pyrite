@@ -1912,9 +1912,7 @@ class SoftwareKBPlugin:
                 if key in dependencies[relation]:
                     continue
 
-                dep_entry = self._readable_entry(
-                    db, dep_id, dep_kb, readable_kbs=readable_kbs
-                )
+                dep_entry = self._readable_entry(db, dep_id, dep_kb, readable_kbs=readable_kbs)
                 if dep_entry:
                     meta = {}
                     if dep_entry.get("metadata"):

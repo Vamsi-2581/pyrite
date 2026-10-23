@@ -2454,9 +2454,7 @@ class TestBacklogDependencies:
                 assert blocked_context["dependencies"]["is_blocked"] is True
                 assert blocker_context["dependencies"]["blocks"] == []
 
-                next_result = plugin._mcp_pull_next(
-                    {"kb_name": "test"}, readable_kbs={"test"}
-                )
+                next_result = plugin._mcp_pull_next({"kb_name": "test"}, readable_kbs={"test"})
                 assert next_result["recommendation"] is None
                 assert [item["id"] for item in next_result["blocked_items"]] == [
                     "item-y",
